@@ -1,10 +1,14 @@
+# Tool Version Audit & Notification System Dependencies
+# If you encounter SSL errors during installation, use:
+# pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org -r requirements.txt
+
 Flask==2.3.3
-requests==2.31.0
-packaging==23.2
-sqlite3
-smtplib
-email-validator==2.1.0
-python-dotenv==1.0.0
-schedule==1.2.0
-beautifulsoup4==4.12.2
-lxml==4.9.3
+requests==2.32.4
+packaging==25.0
+beautifulsoup4==4.13.4
+lxml==6.0.0
+schedule==1.2.2
+
+# Optional: For email validation (not required for basic functionality)
+# email-validator==2.1.0
+# python-dotenv==1.0.0
