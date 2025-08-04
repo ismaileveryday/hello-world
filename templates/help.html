@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Help & Documentation - Tool Version Monitor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>❓ Help & Documentation</h1>
+        <p>Complete guide to using the Tool Version Audit & Notification System.</p>
+    </div>
+
+    <!-- Quick Start Guide -->
+    <div style="margin-bottom: 2rem;">
+        <h2>🚀 Quick Start Guide</h2>
+        <ol style="padding-left: 2rem; line-height: 1.8;">
+            <li><strong>Submit Your Tools:</strong> Go to the <a href="{{ url_for('index') }}">Submit page</a> and enter your tool information</li>
+            <li><strong>Monitor Status:</strong> Check the <a href="{{ url_for('dashboard') }}">Dashboard</a> to see update status</li>
+            <li><strong>Receive Notifications:</strong> Get email alerts when updates are available</li>
+            <li><strong>Follow Instructions:</strong> Use provided upgrade steps to update your tools</li>
+        </ol>
+    </div>
+</div>
+
+<!-- FAQ Section -->
+<div class="card">
+    <h2>🤔 Frequently Asked Questions</h2>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">How does the system work?</h3>
+        <p>Our system automatically checks for the latest versions of your submitted tools by querying official sources like GitHub releases and vendor websites. When a newer version is detected, we send you an email notification with upgrade instructions.</p>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">How often are version checks performed?</h3>
+        <p>Version checks are performed daily at 9:00 AM. You can also manually trigger a check for specific tools using the "Check Now" button on the dashboard.</p>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">What tools are supported?</h3>
+        <p>We support major development tools including:</p>
+        <ul style="margin-left: 2rem;">
+            <li>SQL Server, Oracle Database, MySQL, PostgreSQL</li>
+            <li>Python, Node.js, Java, .NET Framework</li>
+            <li>Visual Studio, Docker, Kubernetes, Git</li>
+            <li>Many more... If your tool isn't listed, select "Other" when submitting</li>
+        </ul>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">How do I format version numbers?</h3>
+        <p>Version numbers should include at least one number. Examples:</p>
+        <ul style="margin-left: 2rem;">
+            <li><code>SQL Server 2019</code></li>
+            <li><code>Python 3.9.1</code> or <code>3.9.1</code></li>
+            <li><code>Node.js 14.2.0</code> or <code>v14.2.0</code></li>
+            <li><code>Java 11</code> or <code>JDK 11</code></li>
+        </ul>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">Can I update my submitted information?</h3>
+        <p>Currently, you need to submit a new entry if your version changes. We're working on an update feature for future releases.</p>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">What if I don't receive email notifications?</h3>
+        <p>Check your spam folder first. If you still don't receive emails, contact your administrator to verify the email configuration. You can also check the dashboard regularly for status updates.</p>
+    </div>
+</div>
+
+<!-- System Features -->
+<div class="card">
+    <h2>✨ System Features</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">📝 Easy Submission</h3>
+            <p>Simple web form to submit your tool versions. Supports both predefined and custom tools.</p>
+        </div>
+        
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">🔄 Automated Checking</h3>
+            <p>Daily automated checks against official sources. No manual intervention required.</p>
+        </div>
+        
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">📧 Smart Notifications</h3>
+            <p>HTML email notifications with upgrade instructions and documentation links.</p>
+        </div>
+        
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">📊 Real-time Dashboard</h3>
+            <p>Monitor all submissions, filter by status, and trigger manual checks.</p>
+        </div>
+        
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">🛡️ Security First</h3>
+            <p>No AI services used. Open-source libraries only. Local data storage.</p>
+        </div>
+        
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem;">
+            <h3 style="color: #667eea;">⚙️ Admin Panel</h3>
+            <p>Comprehensive admin tools for system management and monitoring.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Email Configuration -->
+<div class="card">
+    <h2>📧 Email Configuration</h2>
+    
+    <p>For administrators setting up the system, configure these environment variables:</p>
+    
+    <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; font-family: monospace; margin: 1rem 0;">
+        <div>export SMTP_SERVER="smtp.gmail.com"</div>
+        <div>export SMTP_PORT="587"</div>
+        <div>export SENDER_EMAIL="your-email@company.com"</div>
+        <div>export SENDER_PASSWORD="your-app-password"</div>
+        <div>export SENDER_NAME="Tool Version Monitor"</div>
+    </div>
+    
+    <p><strong>Note:</strong> For Gmail, use an App Password instead of your regular password. Enable 2-factor authentication and generate an app-specific password.</p>
+</div>
+
+<!-- Troubleshooting -->
+<div class="card">
+    <h2>🔧 Troubleshooting</h2>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">Version Check Fails</h3>
+        <ul style="margin-left: 2rem;">
+            <li>Ensure internet connectivity for external API calls</li>
+            <li>Check if the tool has a configured version source</li>
+            <li>Some tools may have rate limits on their APIs</li>
+        </ul>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">Email Not Sending</h3>
+        <ul style="margin-left: 2rem;">
+            <li>Verify SMTP configuration in environment variables</li>
+            <li>Check firewall settings for SMTP port (usually 587)</li>
+            <li>Ensure sender email has proper authentication</li>
+            <li>Test email configuration using the Admin Panel</li>
+        </ul>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="color: #667eea;">Database Issues</h3>
+        <ul style="margin-left: 2rem;">
+            <li>Ensure the data/ directory has write permissions</li>
+            <li>Check disk space availability</li>
+            <li>SQLite database is created automatically on first run</li>
+        </ul>
+    </div>
+</div>
+
+<!-- API Documentation -->
+<div class="card">
+    <h2>🔌 API Endpoints</h2>
+    
+    <p>The system provides these API endpoints for integration:</p>
+    
+    <div style="margin-bottom: 1rem;">
+        <h3 style="color: #667eea;">POST /api/check-version</h3>
+        <p>Manually trigger version check for a specific submission.</p>
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; font-family: monospace;">
+            {"submission_id": 123}
+        </div>
+    </div>
+    
+    <div style="margin-bottom: 1rem;">
+        <h3 style="color: #667eea;">POST /api/send-test-email</h3>
+        <p>Send a test email to verify email configuration.</p>
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; font-family: monospace;">
+            {"email": "test@example.com"}
+        </div>
+    </div>
+</div>
+
+<!-- Command Line Usage -->
+<div class="card">
+    <h2>💻 Command Line Usage</h2>
+    
+    <p>The daily check script can be run manually with different options:</p>
+    
+    <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; font-family: monospace; margin: 1rem 0;">
+        <div># Run version check immediately</div>
+        <div>python daily_check.py run</div>
+        <div></div>
+        <div># Check for missed notifications</div>
+        <div>python daily_check.py notify</div>
+        <div></div>
+        <div># Run as scheduled service</div>
+        <div>python daily_check.py schedule</div>
+        <div></div>
+        <div># Test mode (first 3 submissions only)</div>
+        <div>python daily_check.py test</div>
+    </div>
+    
+    <p><strong>Cron Setup:</strong> To run daily checks automatically, add this to your crontab:</p>
+    <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; font-family: monospace;">
+        0 9 * * * /usr/bin/python3 /path/to/daily_check.py run
+    </div>
+</div>
+
+<!-- Support -->
+<div class="card">
+    <h2>🆘 Support & Contact</h2>
+    
+    <p>Need help? Here are your options:</p>
+    
+    <ul style="margin-left: 2rem; line-height: 1.8;">
+        <li><strong>Check the Dashboard:</strong> Most status information is available on the <a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li><strong>Admin Panel:</strong> Administrators can use the <a href="{{ url_for('admin') }}">Admin Panel</a> for system management</li>
+        <li><strong>Log Files:</strong> Check <code>data/daily_check.log</code> for detailed operation logs</li>
+        <li><strong>GitHub Issues:</strong> Report bugs or request features on our GitHub repository</li>
+        <li><strong>Contact IT:</strong> Reach out to your IT administrator for system-specific issues</li>
+    </ul>
+    
+    <div style="text-align: center; margin-top: 2rem; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
+        <h3>Ready to get started?</h3>
+        <p>Submit your first tool version and start monitoring for updates!</p>
+        <a href="{{ url_for('index') }}" class="btn" style="margin-top: 1rem;">Submit Tool Version</a>
+    </div>
+</div>
+{% endblock %}

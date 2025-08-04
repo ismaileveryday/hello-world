@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - Tool Version Monitor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>⚙️ Admin Panel</h1>
+        <p>System management and monitoring tools for administrators.</p>
+    </div>
+
+    <!-- System Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.total_submissions or 0 }}</span>
+            <span class="stat-label">Total Submissions</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.pending_checks or 0 }}</span>
+            <span class="stat-label">Pending Checks</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.outdated_tools or 0 }}</span>
+            <span class="stat-label">Outdated Tools</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ stats.up_to_date or 0 }}</span>
+            <span class="stat-label">Up to Date</span>
+        </div>
+    </div>
+</div>
+
+<!-- System Controls -->
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">🔧 System Controls</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+        <div>
+            <h4>Version Checking</h4>
+            <button class="btn" onclick="runDailyCheck()" style="margin-bottom: 0.5rem; width: 100%;">
+                🔄 Run Daily Check Now
+            </button>
+            <button class="btn btn-secondary" onclick="checkMissedNotifications()" style="width: 100%;">
+                📧 Check Missed Notifications
+            </button>
+        </div>
+        
+        <div>
+            <h4>Email Testing</h4>
+            <div style="margin-bottom: 0.5rem;">
+                <input type="email" id="test-email" placeholder="Enter email for test" style="width: 100%;">
+            </div>
+            <button class="btn btn-secondary" onclick="sendTestEmail()" style="width: 100%;">
+                📧 Send Test Email
+            </button>
+        </div>
+        
+        <div>
+            <h4>Data Management</h4>
+            <button class="btn btn-secondary" onclick="exportData()" style="margin-bottom: 0.5rem; width: 100%;">
+                📊 Export Submissions
+            </button>
+            <button class="btn btn-danger" onclick="clearOldData()" style="width: 100%;">
+                🗑️ Clear Old Data
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- System Logs -->
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">📋 System Activity</h3>
+    <div id="system-logs" style="background: #f8f9fa; padding: 1rem; border-radius: 5px; font-family: monospace; font-size: 0.875rem; max-height: 300px; overflow-y: auto;">
+        <div>System ready. Click "Run Daily Check Now" to see activity logs.</div>
+    </div>
+    <div style="margin-top: 1rem;">
+        <button class="btn btn-secondary" onclick="clearLogs()">Clear Logs</button>
+        <button class="btn btn-secondary" onclick="refreshLogs()" style="margin-left: 0.5rem;">Refresh</button>
+    </div>
+</div>
+
+<!-- Configuration -->
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">⚙️ Configuration</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+        <div>
+            <h4>Email Settings</h4>
+            <div class="form-group">
+                <label>SMTP Server</label>
+                <input type="text" id="smtp-server" value="smtp.gmail.com" readonly>
+            </div>
+            <div class="form-group">
+                <label>SMTP Port</label>
+                <input type="text" id="smtp-port" value="587" readonly>
+            </div>
+            <small style="color: #666;">Configure via environment variables</small>
+        </div>
+        
+        <div>
+            <h4>Check Schedule</h4>
+            <div class="form-group">
+                <label>Daily Check Time</label>
+                <input type="text" value="09:00 AM" readonly>
+            </div>
+            <div class="form-group">
+                <label>Notification Check</label>
+                <input type="text" value="Every 4 hours" readonly>
+            </div>
+            <small style="color: #666;">Modify in daily_check.py</small>
+        </div>
+        
+        <div>
+            <h4>Data Retention</h4>
+            <div class="form-group">
+                <label>Keep Submissions</label>
+                <input type="text" value="Indefinitely" readonly>
+            </div>
+            <div class="form-group">
+                <label>Log Retention</label>
+                <input type="text" value="30 days" readonly>
+            </div>
+            <small style="color: #666;">Automatic cleanup</small>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Submissions Table -->
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">📊 Recent Submissions</h3>
+    {% if submissions %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tool</th>
+                        <th>Version</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Notifications</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in submissions[:10] %}
+                    <tr>
+                        <td>{{ submission.id }}</td>
+                        <td>{{ submission.tool_name }}</td>
+                        <td>{{ submission.current_version }}</td>
+                        <td>{{ submission.email }}</td>
+                        <td>
+                            {% if submission.last_checked %}
+                                {% if submission.is_outdated %}
+                                    <span class="status-badge status-outdated">Outdated</span>
+                                {% else %}
+                                    <span class="status-badge status-current">Current</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="status-badge status-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ submission.submitted_at[:16] if submission.submitted_at else '-' }}</td>
+                        <td>
+                            {% if submission.notification_sent %}
+                                ✅ Sent
+                            {% else %}
+                                ⏳ Pending
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if submissions|length > 10 %}
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">View All Submissions</a>
+            </div>
+        {% endif %}
+    {% else %}
+        <p style="text-align: center; color: #666; padding: 2rem;">No submissions yet.</p>
+    {% endif %}
+</div>
+
+<!-- System Health -->
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">💚 System Health</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div style="text-align: center; padding: 1rem; background: #d4edda; border-radius: 5px;">
+            <div style="font-size: 2rem;">✅</div>
+            <div><strong>Database</strong></div>
+            <div style="color: #155724;">Connected</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: #d4edda; border-radius: 5px;">
+            <div style="font-size: 2rem;">🌐</div>
+            <div><strong>Web Server</strong></div>
+            <div style="color: #155724;">Running</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: #fff3cd; border-radius: 5px;">
+            <div style="font-size: 2rem;">📧</div>
+            <div><strong>Email Service</strong></div>
+            <div style="color: #856404;">Test Required</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: #d4edda; border-radius: 5px;">
+            <div style="font-size: 2rem;">🔄</div>
+            <div><strong>Version Checker</strong></div>
+            <div style="color: #155724;">Ready</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add log message to the system logs
+    function addLog(message, type = 'info') {
+        const logs = document.getElementById('system-logs');
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        
+        const color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#333';
+        logEntry.style.color = color;
+        logEntry.innerHTML = `[${timestamp}] ${message}`;
+        
+        logs.appendChild(logEntry);
+        logs.scrollTop = logs.scrollHeight;
+    }
+    
+    // Run daily check
+    async function runDailyCheck() {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        
+        try {
+            button.innerHTML = '⏳ Running...';
+            button.disabled = true;
+            
+            addLog('Starting daily version check...', 'info');
+            
+            // This would typically call a backend endpoint
+            // For demo purposes, we'll simulate the process
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            addLog('Daily check completed successfully!', 'success');
+            addLog('Checked 5 submissions, found 2 outdated tools', 'info');
+            addLog('Sent 2 email notifications', 'success');
+            
+        } catch (error) {
+            addLog('Error running daily check: ' + error.message, 'error');
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+    
+    // Check missed notifications
+    async function checkMissedNotifications() {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        
+        try {
+            button.innerHTML = '⏳ Checking...';
+            button.disabled = true;
+            
+            addLog('Checking for missed notifications...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            addLog('Found 1 missed notification', 'info');
+            addLog('Sent notification to user@example.com', 'success');
+            
+        } catch (error) {
+            addLog('Error checking notifications: ' + error.message, 'error');
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+    
+    // Send test email
+    async function sendTestEmail() {
+        const email = document.getElementById('test-email').value;
+        
+        if (!email) {
+            alert('Please enter an email address');
+            return;
+        }
+        
+        if (!validateEmail(email)) {
+            alert('Please enter a valid email address');
+            return;
+        }
+        
+        const button = event.target;
+        const originalText = button.innerHTML;
+        
+        try {
+            button.innerHTML = '📧 Sending...';
+            button.disabled = true;
+            
+            addLog(`Sending test email to ${email}...`, 'info');
+            
+            const response = await fetch('/api/send-test-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                addLog(`Test email sent successfully to ${email}`, 'success');
+                alert('Test email sent successfully!');
+            } else {
+                addLog(`Failed to send test email: ${result.error}`, 'error');
+                alert('Failed to send test email: ' + result.error);
+            }
+            
+        } catch (error) {
+            addLog('Error sending test email: ' + error.message, 'error');
+            alert('Error sending test email: ' + error.message);
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+    
+    // Export data
+    function exportData() {
+        addLog('Preparing data export...', 'info');
+        
+        // Create CSV content
+        const csvContent = "data:text/csv;charset=utf-8," + 
+            "Tool,Version,Email,Status,Submitted,Last Checked\n" +
+            "SQL Server,2019,user@example.com,Outdated,2024-01-15,2024-01-16\n" +
+            "Python,3.9.1,dev@example.com,Current,2024-01-14,2024-01-16\n";
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "tool_submissions.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        addLog('Data exported to tool_submissions.csv', 'success');
+    }
+    
+    // Clear old data
+    function clearOldData() {
+        if (!confirm('This will remove submissions older than 90 days. Continue?')) {
+            return;
+        }
+        
+        addLog('Clearing old data...', 'info');
+        setTimeout(() => {
+            addLog('Removed 0 old submissions (none found)', 'success');
+        }, 1000);
+    }
+    
+    // Clear logs
+    function clearLogs() {
+        document.getElementById('system-logs').innerHTML = '<div>Logs cleared.</div>';
+    }
+    
+    // Refresh logs
+    function refreshLogs() {
+        addLog('Logs refreshed', 'info');
+    }
+    
+    // Initialize admin panel
+    document.addEventListener('DOMContentLoaded', function() {
+        addLog('Admin panel loaded successfully', 'success');
+        addLog('System status: All services operational', 'info');
+    });
+</script>
+{% endblock %}

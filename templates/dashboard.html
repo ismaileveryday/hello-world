@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Tool Version Monitor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>📊 Version Status Dashboard</h1>
+        <p>Monitor all tool version submissions and their update status.</p>
+    </div>
+
+    {% if submissions %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool Name</th>
+                        <th>Current Version</th>
+                        <th>Latest Version</th>
+                        <th>Status</th>
+                        <th>Email</th>
+                        <th>Submitted</th>
+                        <th>Last Checked</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in submissions %}
+                    <tr>
+                        <td><strong>{{ submission.tool_name }}</strong></td>
+                        <td>
+                            <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">
+                                {{ submission.current_version }}
+                            </code>
+                        </td>
+                        <td>
+                            {% if submission.latest_version %}
+                                <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">
+                                    {{ submission.latest_version }}
+                                </code>
+                            {% else %}
+                                <span style="color: #666;">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge {{ submission.status_class }}">
+                                {{ submission.status }}
+                            </span>
+                        </td>
+                        <td>{{ submission.email }}</td>
+                        <td style="font-size: 0.875rem;">
+                            {{ submission.submitted_at[:16] if submission.submitted_at else '-' }}
+                        </td>
+                        <td style="font-size: 0.875rem;">
+                            {{ submission.last_checked[:16] if submission.last_checked else 'Never' }}
+                        </td>
+                        <td>
+                            <button class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" 
+                                    onclick="checkVersion({{ submission.id }})">
+                                🔍 Check Now
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #eee;">
+            <h3 style="margin-bottom: 1rem;">📈 Summary</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">{{ submissions|length }}</span>
+                    <span class="stat-label">Total Submissions</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ submissions|selectattr('status', 'equalto', 'Up to date')|list|length }}</span>
+                    <span class="stat-label">Up to Date</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ submissions|selectattr('status', 'equalto', 'Outdated')|list|length }}</span>
+                    <span class="stat-label">Outdated</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ submissions|selectattr('status', 'equalto', 'Pending check')|list|length }}</span>
+                    <span class="stat-label">Pending Check</span>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: #666;">
+            <h2>📝 No Submissions Yet</h2>
+            <p>Be the first to submit a tool version for monitoring!</p>
+            <div style="margin-top: 2rem;">
+                <a href="{{ url_for('index') }}" class="btn">Submit Your First Tool</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Filter and Search Controls -->
+<div class="card" style="margin-top: 1rem;">
+    <h3 style="margin-bottom: 1rem;">🔍 Filter & Search</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+            <label for="filter-status">Filter by Status:</label>
+            <select id="filter-status" onchange="filterTable()">
+                <option value="">All Status</option>
+                <option value="Up to date">Up to date</option>
+                <option value="Outdated">Outdated</option>
+                <option value="Pending check">Pending check</option>
+            </select>
+        </div>
+        <div>
+            <label for="filter-tool">Filter by Tool:</label>
+            <select id="filter-tool" onchange="filterTable()">
+                <option value="">All Tools</option>
+                {% set tools = submissions|map(attribute='tool_name')|unique|list %}
+                {% for tool in tools %}
+                    <option value="{{ tool }}">{{ tool }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="search-email">Search by Email:</label>
+            <input type="text" id="search-email" placeholder="Enter email..." oninput="filterTable()">
+        </div>
+        <div style="display: flex; align-items: end;">
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-top: 1rem;">
+    <h3 style="margin-bottom: 1rem;">⚡ Quick Actions</h3>
+    <div class="form-group">
+        <button class="btn" onclick="checkAllPending()">🔄 Check All Pending</button>
+        <button class="btn btn-secondary" onclick="refreshPage()" style="margin-left: 1rem;">🔄 Refresh Page</button>
+        <a href="{{ url_for('index') }}" class="btn btn-success" style="margin-left: 1rem;">➕ Add New Tool</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Check version for a specific submission
+    async function checkVersion(submissionId) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        
+        try {
+            button.innerHTML = '<div class="spinner" style="width: 12px; height: 12px; margin: 0 auto;"></div>';
+            button.disabled = true;
+            
+            const response = await fetch('/api/check-version', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ submission_id: submissionId })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`Version check complete!\n\nCurrent: ${result.current_version}\nLatest: ${result.latest_version}\nOutdated: ${result.is_outdated ? 'Yes' : 'No'}`);
+                location.reload(); // Refresh to show updated data
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error checking version: ' + error.message);
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+    
+    // Filter table based on selected criteria
+    function filterTable() {
+        const statusFilter = document.getElementById('filter-status').value;
+        const toolFilter = document.getElementById('filter-tool').value;
+        const emailSearch = document.getElementById('search-email').value.toLowerCase();
+        
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const status = row.querySelector('.status-badge').textContent.trim();
+            const tool = row.cells[0].textContent.trim();
+            const email = row.cells[4].textContent.toLowerCase();
+            
+            const statusMatch = !statusFilter || status === statusFilter;
+            const toolMatch = !toolFilter || tool === toolFilter;
+            const emailMatch = !emailSearch || email.includes(emailSearch);
+            
+            if (statusMatch && toolMatch && emailMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateVisibleCount();
+    }
+    
+    // Clear all filters
+    function clearFilters() {
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-tool').value = '';
+        document.getElementById('search-email').value = '';
+        filterTable();
+    }
+    
+    // Update count of visible rows
+    function updateVisibleCount() {
+        const visibleRows = document.querySelectorAll('tbody tr[style=""], tbody tr:not([style])');
+        const totalRows = document.querySelectorAll('tbody tr').length;
+        
+        // You could add a counter display here if needed
+    }
+    
+    // Check all pending submissions
+    async function checkAllPending() {
+        const pendingRows = document.querySelectorAll('tbody tr .status-pending');
+        
+        if (pendingRows.length === 0) {
+            alert('No pending submissions to check.');
+            return;
+        }
+        
+        if (!confirm(`This will check ${pendingRows.length} pending submissions. Continue?`)) {
+            return;
+        }
+        
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '⏳ Checking...';
+        button.disabled = true;
+        
+        let completed = 0;
+        let errors = 0;
+        
+        for (const statusBadge of pendingRows) {
+            const row = statusBadge.closest('tr');
+            const checkButton = row.querySelector('button');
+            
+            if (checkButton) {
+                try {
+                    checkButton.click();
+                    completed++;
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between requests
+                } catch (error) {
+                    errors++;
+                }
+            }
+        }
+        
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        alert(`Batch check completed!\nProcessed: ${completed}\nErrors: ${errors}`);
+        
+        setTimeout(() => location.reload(), 2000);
+    }
+    
+    // Refresh page
+    function refreshPage() {
+        location.reload();
+    }
+    
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            location.reload();
+        }
+    }, 300000);
+    
+    // Show last refresh time
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date().toLocaleString();
+        const refreshInfo = document.createElement('div');
+        refreshInfo.style.cssText = 'text-align: center; color: #666; font-size: 0.875rem; margin-top: 1rem;';
+        refreshInfo.innerHTML = `Last updated: ${now} | Auto-refresh every 5 minutes`;
+        document.querySelector('main').appendChild(refreshInfo);
+    });
+</script>
+{% endblock %}
